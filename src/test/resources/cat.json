@@ -1,0 +1,11 @@
+{
+	"cat": {
+		"name": "Мурка",
+		"BodyParts": [
+			"head",
+			"paws",
+			"tail"
+		],
+		"age": 2
+	}
+}
