@@ -14,13 +14,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static java.util.Objects.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Анализ файлов")
 public class FilesParsingTest {
 
     private final ClassLoader classLoader = FilesParsingTest.class.getClassLoader();
 
-    @DisplayName("Проверка файлов в архиве smpZip.zip")
+    @DisplayName("Проверка xlsx файлов в архиве smpZip.zip")
     @Test
     void zipFileParsingTest() throws Exception {
         try (ZipInputStream zis = new ZipInputStream(requireNonNull(classLoader.getResourceAsStream("smpZip.zip")))) {
@@ -29,20 +30,38 @@ public class FilesParsingTest {
                 if (entry.getName().endsWith(".xlsx")) {
                     XLS xls = new XLS(zis);
                     String value = xls.excel.getSheetAt(0).getRow(2).getCell(1).getStringCellValue();
-                    Assertions.assertTrue(value.contains("Успех"));
+                    assertThat(value).isEqualTo("Успех");
                 }
+            }
+        }
+    }
+
+    @DisplayName("Проверка csv файлов в архиве smpZip.zip")
+    @Test
+    void zipCheckCsvFileTest() throws Exception {
+        try (ZipInputStream zis = new ZipInputStream(requireNonNull(classLoader.getResourceAsStream("smpZip.zip")))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().endsWith(".csv")) {
                     CSVReader csv = new CSVReader(new InputStreamReader(zis));
                     List<String[]> values = csv.readAll();
-                    Assertions.assertEquals(5, values.size());
-                    Assertions.assertArrayEquals(
-                            new String[]{"name", "phoneNumber", "email", "address", "userAgent", "hexcolor"},
-                            values.get(0)
-                    );
+                    assertThat(values).isNotEmpty().hasSize(5);
+                    assertThat(values.get(0)).isEqualTo(new String[]{"name", "phoneNumber", "email", "address", "userAgent", "hexcolor"});
                 }
+            }
+        }
+    }
+
+    @DisplayName("Проверка pdf файлов в архиве smpZip.zip")
+    @Test
+    void zipCheckPdfFileTest() throws Exception {
+        try (ZipInputStream zis = new ZipInputStream(requireNonNull(classLoader.getResourceAsStream("smpZip.zip")))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().contains("smpPdf.pdf")) {
                     PDF pdf = new PDF(zis);
-                    Assertions.assertTrue(pdf.text.contains("Как правило, в формат PDF"));
+                    assertThat(pdf.numberOfPages).isEqualTo(1);
+                    assertThat(pdf.text).contains("Как правило, в формат PDF");
                 }
             }
         }
